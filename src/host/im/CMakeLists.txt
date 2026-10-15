@@ -58,7 +58,19 @@ target_include_directories(lisa_core PUBLIC
     "${ROOT}/lib/libdc42/include" "${ROOT}/lib/libdc42/src/include"
     "${ROOT}/lisa/keyboard/include")
 target_compile_options(lisa_core PRIVATE -fwrapv -fno-strict-aliasing)
-if(NOT EMSCRIPTEN)
+if(EMSCRIPTEN)
+    target_compile_definitions(lisa_core PRIVATE INFINITE_MAC)
+    target_compile_options(lisa_core PRIVATE -gsource-map)
+    add_executable(lisaem main_worker.c emulator.c host_stubs.c disk.c)
+    target_link_libraries(lisaem PRIVATE lisa_core)
+    target_compile_options(lisaem PRIVATE -gsource-map)
+    target_link_options(lisaem PRIVATE -gsource-map -g2
+        "-sMODULARIZE" "-sEXPORT_ES6" "-sEXPORT_NAME=emulator"
+        "-sEXPORTED_RUNTIME_METHODS=['FS','HEAPU8']"
+        "-sEXPORTED_FUNCTIONS=['_main','_malloc']"
+        "-sINITIAL_MEMORY=67108864" "-sALLOW_MEMORY_GROWTH"
+        "-sEXIT_RUNTIME=1" "-sENVIRONMENT=worker" -lexports.js)
+else()
     add_executable(lisaem-im main_native.c emulator.c host_stubs.c)
     target_link_libraries(lisaem-im PRIVATE lisa_core)
 endif()

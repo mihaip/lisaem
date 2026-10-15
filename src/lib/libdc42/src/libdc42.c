@@ -800,6 +800,10 @@ int dc42_is_valid_image(char *filename)
 
 int dc42_open(DC42ImageType *F, char *filename, char *options)
 {
+#ifdef INFINITE_MAC
+   extern int im_dc42_open(DC42ImageType *, char *, char *);
+   return im_dc42_open(F, filename, options);
+#endif
    // fprintf(stderr,"libdc42: Starting in dc42_open for filename:%s with options:%s\n",filename,options);
    int i, flag;
    long filesizetotal = 0;
