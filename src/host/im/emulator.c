@@ -7,6 +7,7 @@
 int im_powered_off;
 static const char *pram_path;
 static XTIMER next_decisecond;
+static XTIMER next_os_check;
 
 int im_initialize(const char *rom, const char *disk, const char *pram, int io_rom)
 {
@@ -88,12 +89,22 @@ int im_initialize(const char *rom, const char *disk, const char *pram, int io_ro
 int im_execute(int cycles)
 {
     XTIMER before = cpu68k_clocks;
+    XTIMER end = before + cycles;
+    /* The wx status timer also updates the OS-specific mouse locations. */
+    if (cpu68k_clocks >= next_os_check) {
+        check_running_lisa_os();
+        next_os_check = cpu68k_clocks + 5000000;
+    }
     seek_mouse_event();
-    reg68k_external_execute(cycles);
-    get_next_timer_event();
-    while (cpu68k_clocks >= next_decisecond) {
-        decisecond_clk_tick();
-        next_decisecond += 500000;
+    /* Generator returns early at device deadlines. Count elapsed cycles,
+     * rather than treating each call as a complete execution slice. */
+    while (cpu68k_clocks < end && !im_powered_off) {
+        reg68k_external_execute((int)(end - cpu68k_clocks));
+        get_next_timer_event();
+        while (cpu68k_clocks >= next_decisecond) {
+            decisecond_clk_tick();
+            next_decisecond += 500000;
+        }
     }
     seek_mouse_event();
     return (int)(cpu68k_clocks - before);
