@@ -1862,7 +1862,9 @@ uint8 lisa_rb_Oxdc00_cops_via1(uint32 addr)
         DEBUG_LOG(0, "IFR COPS: SRC: copsqueuelen=%d", copsqueuelen);
         // via1_ifr bit1 (2) is data in cops queue indicator
 
-        if (copsqueuelen > 0 || (mousequeuelen > 0 && cops_mouse > 0))
+        // Relative input has pending motion without an absolute seek target.
+        if (copsqueuelen > 0 ||
+            (cops_mouse > 0 && (mousequeuelen > 0 || mouse_pending_x || mouse_pending_y)))
             via[1].via[IFR] |= VIA_IRQ_BIT_CA1;
         else
             via[1].via[IFR] &= ~VIA_IRQ_BIT_CA1;

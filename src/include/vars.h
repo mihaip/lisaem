@@ -1766,6 +1766,9 @@ extern void shift_option_4(void);
 extern void shift_option_7(void);
 
 extern void add_mouse_event(int16 x, int16 y, int8 button);
+extern void set_mouse_relative(int enabled);
+extern void add_mouse_delta(int dx, int dy);
+extern void set_mouse_button(int down);
 
 extern void mmuflush(uint16 opts);
 extern lisa_mem_t rmmuslr2fn(uint16 slr, uint32 a9);

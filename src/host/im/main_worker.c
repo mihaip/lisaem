@@ -5,7 +5,6 @@
 extern void im_disks_flush(void);
 extern void im_disks_close(void);
 extern uint8 is_lower_floppy_currently_inserted(void);
-static int mouse_x = 360, mouse_y = 182;
 
 EM_JS(int, input_value, (const char *name), {
     return workerApi.getInputValue(workerApi.InputBufferAddresses[UTF8ToString(name)]);
@@ -23,12 +22,10 @@ static void poll_input(void)
 {
     if (!EM_ASM_INT({ return workerApi.acquireInputLock(); })) return;
     if (input_value("mousePositionFlagAddr")) {
-        mouse_x = input_value("mousePositionXAddr");
-        mouse_y = input_value("mousePositionYAddr");
-        add_mouse_event(mouse_x, mouse_y, 0);
+        add_mouse_delta(input_value("mouseDeltaXAddr"), input_value("mouseDeltaYAddr"));
     }
     int button = input_value("mouseButtonStateAddr");
-    if (button >= 0) add_mouse_event(mouse_x, mouse_y, button ? 1 : -1);
+    if (button >= 0) set_mouse_button(button);
     if (input_value("keyEventFlagAddr")) {
         int code = input_value("keyCodeAddr");
         int down = input_value("keyStateAddr");
@@ -45,6 +42,7 @@ int main(int argc, char **argv)
         return 1;
     }
     if (im_initialize(argv[1], argv[2], NULL, 0xa8)) return 1;
+    set_mouse_relative(1);
     uint32_t *pixels = malloc(720 * 364 * 4);
     if (!pixels) return 1;
     EM_ASM({ workerApi.didOpenVideo(720, 364); });

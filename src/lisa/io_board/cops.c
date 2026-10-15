@@ -167,6 +167,35 @@ static uint16 copsqueuefull = 0;
   }
 
 static int mouse_seek_count = 0;
+static int mouse_relative = 0;
+static int64_t mouse_relative_x = 0, mouse_relative_y = 0;
+
+/* Stage one signed-byte packet. Keep excess motion until the guest reads it,
+ * rather than truncating large host deltas or applying the seeker's damping. */
+static void stage_relative_mouse(void)
+{
+  mouse_pending_x = mouse_relative_x > 127 ? 127 : mouse_relative_x < -127 ? -127 : mouse_relative_x;
+  mouse_pending_y = mouse_relative_y > 127 ? 127 : mouse_relative_y < -127 ? -127 : mouse_relative_y;
+  mouse_pending = (mouse_pending_x || mouse_pending_y) ? -1 : 0;
+}
+
+void set_mouse_relative(int enabled)
+{
+  mouse_relative = enabled;
+  mouse_relative_x = mouse_relative_y = 0;
+  mouse_pending = mouse_pending_x = mouse_pending_y = 0;
+  mousequeuelen = mouse_seek_count = 0;
+}
+
+void add_mouse_delta(int dx, int dy)
+{
+  if (!mouse_relative || !cops_mouse)
+    return;
+  mouse_relative_x += dx;
+  mouse_relative_y += dy;
+  stage_relative_mouse();
+}
+
 static int last_mouse_button_state = 0; // this is used to prevent repeated mouse up, mouse down events being sent.
                                         // sort of like a switch debounce
 
@@ -682,6 +711,8 @@ void set_mouse_button(int i)
 
 void cops_reset(void) // write 0 to port b bit 0
 {
+  if (mouse_relative)
+    set_mouse_relative(1);
   // Older COPS behavior is to send keyboard unplugged signal before keyboard id,
   // and mouse unplugged signal before mouse plugged signal on a reset.
   copsqueuelen = 0;
@@ -1241,6 +1272,8 @@ void via1_ora(uint8 data, uint8 regnum)
     DEBUG_LOG(0, "SRC: Mouse turned off %02x copsqueuelen:%d", data, copsqueuelen);
     // fprintf(buglog,"COPS Timer: mouse turned off :%02x\n",data);
     cops_mouse = 0;
+    if (mouse_relative)
+      set_mouse_relative(1);
     SET_COPS_NEXT_EVENT(0);
     return; // turn mouse off
 
@@ -1326,13 +1359,21 @@ uint8 via1_ira(uint8 regnum)
     SEND_COPS_CODE(i);
     DEBUG_LOG(0, "IRA1: added mouse dx,dy above %02x, %02x", mouse_pending_x, mouse_pending_y);
 
-    mouse_pending_x = 0;
-    mouse_pending_y = 0;
-
-    llast_ratx = last_ratx;
-    llast_raty = last_raty;
-    last_ratx = ratx;
-    last_raty = raty;
+    if (mouse_relative)
+    {
+      mouse_relative_x -= mouse_pending_x;
+      mouse_relative_y -= mouse_pending_y;
+      stage_relative_mouse();
+    }
+    else
+    {
+      mouse_pending_x = 0;
+      mouse_pending_y = 0;
+      llast_ratx = last_ratx;
+      llast_raty = last_raty;
+      last_ratx = ratx;
+      last_raty = raty;
+    }
 
     DEBUG_LOG(0, "Sending mouse 00, x,y to follow.")
     return 0x00; // this one is 1st, then dx, then dy to indicate mouse motion data. ie: 00,dx,dy
@@ -1355,6 +1396,8 @@ uint8 via1_ira(uint8 regnum)
 
 void add_mouse_event(int16 x, int16 y, int8 button)
 {
+  if (mouse_relative)
+    return;
   if (mousequeuelen + 1 > MAXMOUSEQUEUE)
   {
     ALERT_LOG(0, "overflowed mouse queue!");
@@ -1400,6 +1443,9 @@ void seek_mouse_event(void)
 
   if (floppy_6504_wait > 0 && floppy_6504_wait < 128)
     floppy_6504_wait--;
+
+  if (mouse_relative)
+    return;
 
   if (mouse_seek_count)
   {
