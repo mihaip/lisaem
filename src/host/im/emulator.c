@@ -131,9 +131,14 @@ void save_pram(void)
 
 void im_close(void)
 {
+    extern DC42ImageType current_upper_floppy_image, current_lower_floppy_image;
     im_audio_close();
     save_pram();
     profile_unmount();
+    if (current_upper_floppy_image.fd > 2 && current_upper_floppy_image.close_image)
+        current_upper_floppy_image.close_image(&current_upper_floppy_image);
+    if (current_lower_floppy_image.fd > 2 && current_lower_floppy_image.close_image)
+        current_lower_floppy_image.close_image(&current_lower_floppy_image);
 }
 
 void lisa_powered_off(void) { im_powered_off = 1; }
