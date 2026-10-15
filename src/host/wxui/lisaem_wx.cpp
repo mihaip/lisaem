@@ -2062,9 +2062,28 @@ static void mouse_file_if_due(void)
     }
 }
 
-// LISAEM_FLOPPY_AT=<seconds>,<image>: once, that many seconds of host time
-// after start, insert the disk image into the floppy drive, as the menu's
-// insert command does, without restarting from it (unlike -f).
+// Consume queued disk paths only after the guest has ejected the previous disk.
+static void floppy_insert_from_file(void)
+{
+    const char *path = getenv("LISAEM_FLOPPY_FILE");
+    static long offset;
+    if (!path || is_lower_floppy_currently_inserted()) return;
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+    fseek(f, offset, SEEK_SET);
+    char image[2048];
+    if (fgets(image, sizeof(image), f) && strchr(image, '\n')) {
+        offset = ftell(f);
+        image[strcspn(image, "\r\n")] = 0;
+        if (*image) {
+            int r = floppy_insert(image, 0);
+            fprintf(stderr, "LISAEM_FLOPPY_FILE: inserted %s, result %d\n", image, r);
+        }
+    }
+    fclose(f);
+}
+
+// LISAEM_FLOPPY_AT inserts once after a host-time delay, without rebooting.
 static void floppy_insert_if_due(void)
 {
     static int enabled = -1;
@@ -2205,6 +2224,7 @@ void LisaEmFrame::Update_Status(long elapsed,long idleentry)
     mouse_move_if_due();
     mouse_file_if_due();
     floppy_insert_if_due();
+    floppy_insert_from_file();
 
 }
 
