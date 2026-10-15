@@ -89,3 +89,4 @@ src/**/include/machine.h
 **/cpu68k/gen68k
 **/obj/def68k
 **/obj/gen68k
+/build-im-*/
