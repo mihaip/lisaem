@@ -1,0 +1,6 @@
+# LOS 3.1 regression replay: move and click in the same host batch.
+# At 105 seconds the Disk label should be selected (white on black).
+# Before the COPS queue fix the pointer arrived but the click selected nothing.
+100 move 660 343
+100 down 660 343
+100.1 up 660 343

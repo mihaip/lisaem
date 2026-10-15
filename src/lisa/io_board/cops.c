@@ -1505,6 +1505,11 @@ void seek_mouse_event(void)
 
     bigm_delta(dx, dy);
     DEBUG_LOG(0, "mouse dx,dy is (%d,%d) non zero, won't send it yet - still moving.", dx, dy);
+    /* Keep the target at the front of the queue until its motion has been
+     * delivered. Otherwise a queued click is sent at the previous position,
+     * and dequeueing the move loses its remaining distance. */
+    if (mouse_pending_x || mouse_pending_y)
+      return;
   }
 
   if (!(mouse_pending_x | mouse_pending_y) && mousequeuelen == 1 && copsqueuelen == 0)
