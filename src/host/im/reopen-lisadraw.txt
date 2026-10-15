@@ -1,0 +1,8 @@
+# Cold boot the disk produced by smoke-lisadraw.txt; reopen its sample document.
+130 move 35 55
+135 down 35 55
+140 up 35 55
+150 move 102 8
+155 down 102 8
+160 move 124 83
+170 up 124 83

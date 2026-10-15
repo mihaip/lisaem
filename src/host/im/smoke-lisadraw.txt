@@ -1,0 +1,54 @@
+# Start from the clean install seed and matching PRAM, with a private draw.dc42.
+# Copy the master application, stationery, and examples to ProFile, create a
+# rectangle document, save it, and power off. Run for at most 1000 guest seconds.
+130 floppy draw.dc42
+160 move 660 295
+165 down 660 295
+170 up 660 295
+200 move 102 8
+205 down 102 8
+210 move 124 83
+220 up 124 83
+250 key 0xff
+250.1 key 0xf0
+250.2 key 0x70
+250.3 key 0x7f
+260 move 102 8
+265 down 102 8
+270 move 124 98
+280 up 124 98
+300 move 230 211
+305 down 230 211
+310 move 660 343
+320 up 660 343
+400 move 600 160
+405 down 600 160
+410 up 600 160
+500 move 102 8
+505 down 102 8
+510 move 124 83
+520 up 124 83
+550 move 70 60
+555 down 70 60
+560 up 70 60
+570 move 102 8
+575 down 102 8
+580 move 146 128
+590 up 146 128
+620 move 102 8
+625 down 102 8
+630 move 124 83
+640 up 124 83
+700 move 20 141
+705 down 20 141
+710 up 20 141
+730 move 150 100
+735 down 150 100
+740 move 350 200
+750 up 350 200
+800 move 102 8
+805 down 102 8
+810 move 145 68
+820 up 145 68
+900 key 0x80
+900.1 key 0xfb
