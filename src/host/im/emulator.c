@@ -100,6 +100,12 @@ int im_execute(int cycles)
      * rather than treating each call as a complete execution slice. */
     while (cpu68k_clocks < end && !im_powered_off) {
         reg68k_external_execute((int)(end - cpu68k_clocks));
+        /* LOS restarts through an odd PC with an odd address-error vector.
+         * Match the wx loop: Generator cannot advance clocks in this state. */
+        if ((pc24 & 1) && (lisa_ram_safe_getlong(context, 12) & 1)) {
+            lisa_rebooted();
+            break;
+        }
         get_next_timer_event();
         while (cpu68k_clocks >= next_decisecond) {
             decisecond_clk_tick();
