@@ -1,0 +1,41 @@
+# LOS installation replay. Guest seconds; requires private sys1.dc42 through sys5.dc42.
+# sys3 must contain only side 0 of the archived 800K capture.
+# Boot with LISAEM_BOOT_FLOPPY=sys1.dc42 and run for at most 2000 guest seconds.
+40 move 602 215
+41 down 602 215
+42 up 602 215
+50 move 606 120
+51 down 606 120
+52 up 606 120
+60 move 601 172
+61 down 601 172
+62 up 601 172
+70 move 600 70
+71 down 600 70
+72 up 600 70
+500 floppy sys2.dc42
+502 move 600 118
+503 down 600 118
+504 up 600 118
+800 floppy sys3.dc42
+802 move 600 118
+803 down 600 118
+804 up 600 118
+1100 floppy sys4.dc42
+1102 move 600 118
+1103 down 600 118
+1104 up 600 118
+1400 floppy sys5.dc42
+1402 move 600 118
+1403 down 600 118
+1404 up 600 118
+1700 floppy sys1.dc42
+1702 move 600 118
+1703 down 600 118
+1704 up 600 118
+1900 move 600 70
+1901 down 600 70
+1902 up 600 70
+1910 move 600 118
+1911 down 600 118
+1912 up 600 118
