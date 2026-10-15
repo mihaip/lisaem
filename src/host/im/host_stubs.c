@@ -19,8 +19,6 @@ int ImageWriter_LisaEm_Init(int port) { return 0; }
 void ImageWriterLoop(int port, uint8 c) {}
 void iw_formfeed(int port) {}
 void gen_clock_diff_sleep(long diff) {}
-void sound_play(uint16 t2) {}
-void sound_off(void) {}
 
 #define DISCONNECTED_SERIAL(name) \
     char read_serial_port_##name(unsigned int port) { return 0; } \

@@ -48,6 +48,7 @@ int main(int argc, char **argv)
     uint32_t *pixels = malloc(720 * 364 * 4);
     if (!pixels) return 1;
     EM_ASM({ workerApi.didOpenVideo(720, 364); });
+    EM_ASM({ workerApi.didOpenAudio(44100, 8, 1); });
     double deadline = emscripten_get_now();
     int booted = 0;
     while (!im_powered_off) {

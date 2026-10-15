@@ -107,6 +107,7 @@ int im_execute(int cycles)
         }
     }
     seek_mouse_event();
+    im_audio_advance();
     return (int)(cpu68k_clocks - before);
 }
 
@@ -130,6 +131,7 @@ void save_pram(void)
 
 void im_close(void)
 {
+    im_audio_close();
     save_pram();
     profile_unmount();
 }
