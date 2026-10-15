@@ -24,7 +24,7 @@ EM_JS(int, disk_read, (int id, void *buf, int offset, int size), {
 EM_JS(int, disk_write, (int id, const void *buf, int offset, int size), {
     return workerApi.disks.write(id, buf, offset, size);
 });
-EM_JS(void, disk_close, (int id), { workerApi.disks.close(id); });
+EM_JS(void, disk_close, (int id), { workerApi.disks.close(id, true); });
 
 static int error(DC42ImageType *f, const char *message)
 {
@@ -77,6 +77,11 @@ static int close_image(DC42ImageType *f)
     if (!*link) return 0;
     Disk *d = *link;
     flush(d);
+    /* Export only after the guest has put away the floppy and checksums have
+     * been refreshed. Keep the tagged container intact for native LisaEm. */
+    if (f->tagsize == 12) {
+        EM_ASM({ workerApi.didEjectFloppy(UTF8ToString($0), $1, $2); }, f->fname, f->RAM, f->size);
+    }
     *link = d->next;
     free(d);
     disk_close(f->fd - 3);

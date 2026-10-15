@@ -40,8 +40,8 @@ static void poll_input(void)
 
 int main(int argc, char **argv)
 {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: lisaem ROM DC42-DISK\n");
+    if (argc < 3) {
+        fprintf(stderr, "Usage: lisaem ROM DC42-DISK [DC42-FLOPPY ...]\n");
         return 1;
     }
     if (im_initialize(argv[1], argv[2], NULL, 0xa8)) return 1;
@@ -51,6 +51,8 @@ int main(int argc, char **argv)
     EM_ASM({ workerApi.didOpenAudio(44100, 8, 1); });
     double deadline = emscripten_get_now();
     int booted = 0;
+    int next_floppy = 3;
+    uint64_t last_floppy_present = 0;
     while (!im_powered_off) {
         poll_input();
         if (input_value("stopFlagAddr")) break;
@@ -69,10 +71,20 @@ int main(int argc, char **argv)
         im_render(pixels);
         EM_ASM({ workerApi.blit($0, 720 * 364 * 4); }, pixels);
         EM_ASM({ workerApi.checkForPeriodicTasks(); });
-        char *name = is_lower_floppy_currently_inserted() ? NULL : consume_disk_name();
-        if (name) {
-            floppy_insert(name, 0);
-            free(name);
+        if (is_lower_floppy_currently_inserted()) last_floppy_present = cpu68k_clocks;
+        /* The eject command closes the image before LOS acknowledges its
+         * interrupt. Inserting immediately can merge the two notifications
+         * and leave the new disk invisible. Allow a physical disk-change
+         * interval and wait for the outstanding floppy interrupt to clear. */
+        if (!is_lower_floppy_currently_inserted() && !floppy_FDIR &&
+            cpu68k_clocks - last_floppy_present >= 5000000) {
+            char *name = next_floppy < argc ? strdup(argv[next_floppy++]) : consume_disk_name();
+            if (name) {
+                if (floppy_insert(name, 0)) {
+                    EM_ASM({ workerApi.reportError("Could not insert Lisa floppy. Use a 400K or 800K Disk Copy 4.2 image with sector tags."); });
+                }
+                free(name);
+            }
         }
         deadline += 20;
         double now = emscripten_get_now();
