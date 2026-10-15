@@ -534,7 +534,7 @@ fi
 # allow versions of LisaEm compiled under Linux, *BSD, etc. to run as compiled
 # without being installed.  (Some versions of wxWidgets look for the lowercase name, others, upper)
 cd ${XTLD}/share || ( echo "Could not find ../share from $(/bin/pwd)" 1>&2; exit 1 )
-ln -sf ../resources lisaem
+ln -sfn ../resources lisaem
 cd ..
 
 # source code lists for compilation as well as counting needed
